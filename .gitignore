@@ -1,0 +1,38 @@
+# OS X noise
+.DS_Store
+*.swp
+*.lock
+
+# Xcode noise
+*~.nib
+*.moved-aside
+
+# Xcode build files
+DerivedData/
+Build/
+
+# Xcode settings
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+
+# Xcode private
+xcuserdata
+!xcshareddata
+!xcschemes
+
+# AppCode files
+.idea/
+
+# CocoaPods files 
+Pods/
+Podfile.lock
+
+# some root folders
+/Docs/
+/Temp/
