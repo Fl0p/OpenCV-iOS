@@ -6,11 +6,9 @@
 # Xcode noise
 *~.nib
 *.moved-aside
-
 # Xcode build files
 DerivedData/
 Build/
-
 # Xcode settings
 *.pbxuser
 !default.pbxuser
@@ -20,19 +18,16 @@ Build/
 !default.mode2v3
 *.perspectivev3
 !default.perspectivev3
-
 # Xcode private
 xcuserdata
 !xcshareddata
 !xcschemes
-
 # AppCode files
 .idea/
-
 # CocoaPods files 
 Pods/
 Podfile.lock
-
 # some root folders
 /Docs/
 /Temp/
+/build/
