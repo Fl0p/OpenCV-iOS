@@ -1,14 +1,15 @@
 # OpenCV for iOS
 
-## Version 2.4.3.2
+Just Compilled OpenCV framework for iOS. 
 
-Compilled OpenCV framework for iOS. 
+Have different versions (see tags)
 
-## Use
+
+## Usage:
 
 Use `.mm` flies instead of `.m` (Objective-C++)
 
-Header includes:
+Add import:
 
 	#import <opencv2/opencv.hpp>
 
@@ -17,11 +18,11 @@ Header includes:
 
 Just add line in your Podfile: 
 
-	pod 'OpenCV', '= 2.4.3.2'
+	pod 'OpenCV'
 
 ### Instalation Manually 
 
-Add opencv2.framework to your project
+Add `opencv2.framework` to your project
 
 Also add following frameworks to your project:
 

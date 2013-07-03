@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "OpenCV"
-  s.version      = "2.4.5"
+  s.version      = "2.4.6"
   s.summary      = "OpenCV (Computer Vision) for iOS."
   s.homepage     = "https://github.com/Fl0p/OpenCV-iOS"
   s.description  = <<-DESC
@@ -11,8 +11,9 @@ Pod::Spec.new do |s|
     Q&A forum:   http://answers.opencv.org
     Dev zone:    http://code.opencv.org
 
-    Just compiled iOS frameworks v2.4.5
+    Just compiled iOS framework version #{s.version}
     Also available for downloading here - http://sourceforge.net/projects/opencvlibrary/files/opencv-ios/
+    .
               DESC
                   
   s.license      = { :type => 'BSD', :file => 'LICENSE',
@@ -61,13 +62,20 @@ Pod::Spec.new do |s|
 
   s.source       = { 
     :git => "https://github.com/Fl0p/OpenCV-iOS.git", 
-    :tag => "2.4.5"
+    :tag => "#{s.version}"
   }
-  s.source_files = 'opencv2.framework/Headers/**/*{.h,.hpp}'
-  s.header_mappings_dir = 'Headers'
-  s.preserve_paths = 'opencv2.framework'
+
   s.platform     = :ios
+
+  s.preserve_paths = 'opencv2.framework'
+  
+  s.source_files = 'opencv2.framework/Versions/A/Headers/**/*{.h,.hpp}'
+  
+  s.public_header_files = 'opencv2.framework/Versions/A/Headers/**/*{.h,.hpp}'
+  s.header_dir = 'opencv2'
+  s.header_mappings_dir = 'opencv2.framework/Versions/A/Headers/'
+  
   s.libraries    = 'c++', 'stdc++'  
-  s.frameworks = 'Accelerate', 'AssetsLibrary', 'AVFoundation', 'CoreGraphics', 'CoreImage', 'CoreMedia', 'CoreVideo', 'Foundation', 'opencv2', 'QuartzCore', 'UIKit'
+  s.frameworks = 'opencv2', 'Accelerate', 'AssetsLibrary', 'AVFoundation', 'CoreGraphics', 'CoreImage', 'CoreMedia', 'CoreVideo', 'Foundation', 'QuartzCore', 'UIKit'
   s.xcconfig = { 'FRAMEWORK_SEARCH_PATHS' => '$(PODS_ROOT)/OpenCV' }
 end
