@@ -716,12 +716,12 @@ template<typename _Tp, int m> struct CV_EXPORTS Matx_DetOp
     double operator ()(const Matx<_Tp, m, m>& a) const
     {
         Matx<_Tp, m, m> temp = a;
-        double p = LU(temp.val, m, m, 0, 0, 0);
+        double p = LU(temp.val, m*sizeof(_Tp), m, 0, 0, 0);
         if( p == 0 )
             return p;
         for( int i = 0; i < m; i++ )
             p *= temp(i, i);
-        return p;
+        return 1./p;
     }
 };
 
@@ -2916,6 +2916,9 @@ CV_EXPORTS FileStorage& operator << (FileStorage& fs, const string& str);
 
 static inline FileStorage& operator << (FileStorage& fs, const char* str)
 { return (fs << string(str)); }
+
+static inline FileStorage& operator << (FileStorage& fs, char* value)
+{ return (fs << string(value)); }
 
 inline FileNode::FileNode() : fs(0), node(0) {}
 inline FileNode::FileNode(const CvFileStorage* _fs, const CvFileNode* _node)

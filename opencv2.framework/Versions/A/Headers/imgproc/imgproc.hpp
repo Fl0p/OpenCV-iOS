@@ -759,6 +759,21 @@ CV_EXPORTS double compareHist( const SparseMat& H1, const SparseMat& H2, int met
 //! normalizes the grayscale image brightness and contrast by normalizing its histogram
 CV_EXPORTS_W void equalizeHist( InputArray src, OutputArray dst );
 
+class CV_EXPORTS CLAHE : public Algorithm
+{
+public:
+    virtual void apply(InputArray src, OutputArray dst) = 0;
+
+    virtual void setClipLimit(double clipLimit) = 0;
+    virtual double getClipLimit() const = 0;
+
+    virtual void setTilesGridSize(Size tileGridSize) = 0;
+    virtual Size getTilesGridSize() const = 0;
+
+    virtual void collectGarbage() = 0;
+};
+CV_EXPORTS Ptr<CLAHE> createCLAHE(double clipLimit = 40.0, Size tileGridSize = Size(8, 8));
+
 CV_EXPORTS float EMD( InputArray signature1, InputArray signature2,
                       int distType, InputArray cost=noArray(),
                       float* lowerBound=0, OutputArray flow=noArray() );
@@ -1050,7 +1065,21 @@ enum
     COLOR_RGBA2mRGBA = 125,
     COLOR_mRGBA2RGBA = 126,
 
-    COLOR_COLORCVT_MAX  = 127
+    COLOR_RGB2YUV_I420 = 127,
+    COLOR_BGR2YUV_I420 = 128,
+    COLOR_RGB2YUV_IYUV = COLOR_RGB2YUV_I420,
+    COLOR_BGR2YUV_IYUV = COLOR_BGR2YUV_I420,
+
+    COLOR_RGBA2YUV_I420 = 129,
+    COLOR_BGRA2YUV_I420 = 130,
+    COLOR_RGBA2YUV_IYUV = COLOR_RGBA2YUV_I420,
+    COLOR_BGRA2YUV_IYUV = COLOR_BGRA2YUV_I420,
+    COLOR_RGB2YUV_YV12  = 131,
+    COLOR_BGR2YUV_YV12  = 132,
+    COLOR_RGBA2YUV_YV12 = 133,
+    COLOR_BGRA2YUV_YV12 = 134,
+
+    COLOR_COLORCVT_MAX  = 135
 };
 
 
