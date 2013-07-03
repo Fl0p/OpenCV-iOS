@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "OpenCV"
-  s.version      = "2.4.3.2"
+  s.version      = "2.4.5"
   s.summary      = "OpenCV (Computer Vision) for iOS."
   s.homepage     = "https://github.com/Fl0p/OpenCV-iOS"
   s.description  = <<-DESC
@@ -11,7 +11,8 @@ Pod::Spec.new do |s|
     Q&A forum:   http://answers.opencv.org
     Dev zone:    http://code.opencv.org
 
-    Compilled framework for iOS v2.4.3.2
+    Just compiled iOS frameworks v2.4.5
+    Also available for downloading here - http://sourceforge.net/projects/opencvlibrary/files/opencv-ios/
               DESC
                   
   s.license      = { :type => 'BSD', :file => 'LICENSE',
@@ -60,7 +61,7 @@ Pod::Spec.new do |s|
 
   s.source       = { 
     :git => "https://github.com/Fl0p/OpenCV-iOS.git", 
-    :tag => "2.4.3.2"
+    :tag => "2.4.5"
   }
   s.source_files = 'opencv2.framework/Headers/**/*{.h,.hpp}'
   s.header_mappings_dir = 'Headers'
