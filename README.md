@@ -22,7 +22,7 @@ Just add line in your Podfile:
 
 ### Instalation Manually 
 
-Add `opencv2.framework` to your project
+Download and add `opencv2.framework` to your project
 
 Also add following frameworks to your project:
 
@@ -40,7 +40,6 @@ Also add following frameworks to your project:
 Also add following libs :
 
 - libc++.dylib
-- libstdc++.dylib
 
 
 ## OpenCV README
