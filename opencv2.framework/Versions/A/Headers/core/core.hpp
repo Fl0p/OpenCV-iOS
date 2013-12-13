@@ -90,18 +90,10 @@ class Mat;
 class SparseMat;
 typedef Mat MatND;
 
-namespace ogl {
-    class Buffer;
-    class Texture2D;
-    class Arrays;
-}
-
-// < Deprecated
 class GlBuffer;
 class GlTexture;
 class GlArrays;
 class GlCamera;
-// >
 
 namespace gpu {
     class GpuMat;
@@ -212,11 +204,11 @@ CV_EXPORTS ErrorCallback redirectError( ErrorCallback errCallback,
 #ifdef __GNUC__
 #define CV_Error( code, msg ) cv::error( cv::Exception(code, msg, __func__, __FILE__, __LINE__) )
 #define CV_Error_( code, args ) cv::error( cv::Exception(code, cv::format args, __func__, __FILE__, __LINE__) )
-#define CV_Assert( expr ) if(!!(expr)) ; else cv::error( cv::Exception(CV_StsAssert, #expr, __func__, __FILE__, __LINE__) )
+#define CV_Assert( expr ) if((expr)) ; else cv::error( cv::Exception(CV_StsAssert, #expr, __func__, __FILE__, __LINE__) )
 #else
 #define CV_Error( code, msg ) cv::error( cv::Exception(code, msg, "", __FILE__, __LINE__) )
 #define CV_Error_( code, args ) cv::error( cv::Exception(code, cv::format args, "", __FILE__, __LINE__) )
-#define CV_Assert( expr ) if(!!(expr)) ; else cv::error( cv::Exception(CV_StsAssert, #expr, "", __FILE__, __LINE__) )
+#define CV_Assert( expr ) if((expr)) ; else cv::error( cv::Exception(CV_StsAssert, #expr, "", __FILE__, __LINE__) )
 #endif
 
 #ifdef _DEBUG
@@ -224,8 +216,6 @@ CV_EXPORTS ErrorCallback redirectError( ErrorCallback errCallback,
 #else
 #define CV_DbgAssert(expr)
 #endif
-
-CV_EXPORTS void glob(String pattern, std::vector<String>& result, bool recursive = false);
 
 CV_EXPORTS void setNumThreads(int nthreads);
 CV_EXPORTS int getNumThreads();
@@ -1322,8 +1312,7 @@ public:
         EXPR              = 6 << KIND_SHIFT,
         OPENGL_BUFFER     = 7 << KIND_SHIFT,
         OPENGL_TEXTURE    = 8 << KIND_SHIFT,
-        GPU_MAT           = 9 << KIND_SHIFT,
-        OCL_MAT           =10 << KIND_SHIFT
+        GPU_MAT           = 9 << KIND_SHIFT
     };
     _InputArray();
 
@@ -1338,23 +1327,15 @@ public:
     template<typename _Tp, int m, int n> _InputArray(const Matx<_Tp, m, n>& matx);
     _InputArray(const Scalar& s);
     _InputArray(const double& val);
-    // < Deprecated
     _InputArray(const GlBuffer& buf);
     _InputArray(const GlTexture& tex);
-    // >
     _InputArray(const gpu::GpuMat& d_mat);
-    _InputArray(const ogl::Buffer& buf);
-    _InputArray(const ogl::Texture2D& tex);
 
     virtual Mat getMat(int i=-1) const;
     virtual void getMatVector(vector<Mat>& mv) const;
-    // < Deprecated
     virtual GlBuffer getGlBuffer() const;
     virtual GlTexture getGlTexture() const;
-    // >
     virtual gpu::GpuMat getGpuMat() const;
-    /*virtual*/ ogl::Buffer getOGlBuffer() const;
-    /*virtual*/ ogl::Texture2D getOGlTexture2D() const;
 
     virtual int kind() const;
     virtual Size size(int i=-1) const;
@@ -1406,8 +1387,6 @@ public:
     template<typename _Tp, int m, int n> _OutputArray(Matx<_Tp, m, n>& matx);
     template<typename _Tp> _OutputArray(_Tp* vec, int n);
     _OutputArray(gpu::GpuMat& d_mat);
-    _OutputArray(ogl::Buffer& buf);
-    _OutputArray(ogl::Texture2D& tex);
 
     _OutputArray(const Mat& m);
     template<typename _Tp> _OutputArray(const vector<_Tp>& vec);
@@ -1418,16 +1397,12 @@ public:
     template<typename _Tp, int m, int n> _OutputArray(const Matx<_Tp, m, n>& matx);
     template<typename _Tp> _OutputArray(const _Tp* vec, int n);
     _OutputArray(const gpu::GpuMat& d_mat);
-    _OutputArray(const ogl::Buffer& buf);
-    _OutputArray(const ogl::Texture2D& tex);
 
     virtual bool fixedSize() const;
     virtual bool fixedType() const;
     virtual bool needed() const;
     virtual Mat& getMatRef(int i=-1) const;
     /*virtual*/ gpu::GpuMat& getGpuMatRef() const;
-    /*virtual*/ ogl::Buffer& getOGlBufferRef() const;
-    /*virtual*/ ogl::Texture2D& getOGlTexture2DRef() const;
     virtual void create(Size sz, int type, int i=-1, bool allowTransposed=false, int fixedDepthMask=0) const;
     virtual void create(int rows, int cols, int type, int i=-1, bool allowTransposed=false, int fixedDepthMask=0) const;
     virtual void create(int dims, const int* size, int type, int i=-1, bool allowTransposed=false, int fixedDepthMask=0) const;
@@ -2045,40 +2020,6 @@ public:
     uint64 state;
 };
 
-/*!
-   Random Number Generator - MT
-
-   The class implements RNG using the Mersenne Twister algorithm
-*/
-class CV_EXPORTS RNG_MT19937
-{
-public:
-    RNG_MT19937();
-    RNG_MT19937(unsigned s);
-    void seed(unsigned s);
-
-    unsigned next();
-
-    operator int();
-    operator unsigned();
-    operator float();
-    operator double();
-
-    unsigned operator ()(unsigned N);
-    unsigned operator ()();
-
-    //! returns uniformly distributed integer random number from [a,b) range
-    int uniform(int a, int b);
-    //! returns uniformly distributed floating-point random number from [a,b) range
-    float uniform(float a, float b);
-    //! returns uniformly distributed double-precision floating-point random number from [a,b) range
-    double uniform(double a, double b);
-
-private:
-    enum PeriodParameters {N = 624, M = 397};
-    unsigned state[N];
-    int mti;
-};
 
 /*!
  Termination criteria in iterative algorithms
@@ -2096,10 +2037,10 @@ public:
     //! default constructor
     TermCriteria();
     //! full constructor
-    TermCriteria(int type, int maxCount, double epsilon);
+    TermCriteria(int _type, int _maxCount, double _epsilon);
     //! conversion from CvTermCriteria
     TermCriteria(const CvTermCriteria& criteria);
-    //! conversion to CvTermCriteria
+    //! conversion from CvTermCriteria
     operator CvTermCriteria() const;
 
     int type; //!< the type of termination criteria: COUNT, EPS or COUNT + EPS
@@ -3410,6 +3351,8 @@ public:
     //! converts dense 2d matrix to the sparse form
     /*!
      \param m the input matrix
+     \param try1d if true and m is a single-column matrix (Nx1),
+            then the sparse matrix will be 1-dimensional.
     */
     explicit SparseMat(const Mat& m);
     //! converts old-style sparse matrix to the new-style. All the data is copied
@@ -3802,7 +3745,6 @@ public:
     SparseMatConstIterator_();
     //! the full constructor setting the iterator to the first sparse matrix element
     SparseMatConstIterator_(const SparseMat_<_Tp>* _m);
-    SparseMatConstIterator_(const SparseMat* _m);
     //! the copy constructor
     SparseMatConstIterator_(const SparseMatConstIterator_& it);
 
@@ -3832,7 +3774,6 @@ public:
     SparseMatIterator_();
     //! the full constructor setting the iterator to the first sparse matrix element
     SparseMatIterator_(SparseMat_<_Tp>* _m);
-    SparseMatIterator_(SparseMat* _m);
     //! the copy constructor
     SparseMatIterator_(const SparseMatIterator_& it);
 
@@ -4516,26 +4457,6 @@ public:
                   Ptr<Algorithm> (Algorithm::*getter)()=0,
                   void (Algorithm::*setter)(const Ptr<Algorithm>&)=0,
                   const string& help=string());
-    void addParam(Algorithm& algo, const char* name,
-                  float& value, bool readOnly=false,
-                  float (Algorithm::*getter)()=0,
-                  void (Algorithm::*setter)(float)=0,
-                  const string& help=string());
-    void addParam(Algorithm& algo, const char* name,
-                  unsigned int& value, bool readOnly=false,
-                  unsigned int (Algorithm::*getter)()=0,
-                  void (Algorithm::*setter)(unsigned int)=0,
-                  const string& help=string());
-    void addParam(Algorithm& algo, const char* name,
-                  uint64& value, bool readOnly=false,
-                  uint64 (Algorithm::*getter)()=0,
-                  void (Algorithm::*setter)(uint64)=0,
-                  const string& help=string());
-    void addParam(Algorithm& algo, const char* name,
-                  uchar& value, bool readOnly=false,
-                  uchar (Algorithm::*getter)()=0,
-                  void (Algorithm::*setter)(uchar)=0,
-                  const string& help=string());
     template<typename _Tp, typename _Base> void addParam(Algorithm& algo, const char* name,
                   Ptr<_Tp>& value, bool readOnly=false,
                   Ptr<_Tp> (Algorithm::*getter)()=0,
@@ -4555,7 +4476,7 @@ protected:
 
 struct CV_EXPORTS Param
 {
-    enum { INT=0, BOOLEAN=1, REAL=2, STRING=3, MAT=4, MAT_VECTOR=5, ALGORITHM=6, FLOAT=7, UNSIGNED_INT=8, UINT64=9, SHORT=10, UCHAR=11 };
+    enum { INT=0, BOOLEAN=1, REAL=2, STRING=3, MAT=4, MAT_VECTOR=5, ALGORITHM=6, FLOAT=7, UNSIGNED_INT=8, UINT64=9, SHORT=10 };
 
     Param();
     Param(int _type, bool _readonly, int _offset,
@@ -4658,13 +4579,6 @@ template<> struct ParamType<uint64>
     enum { type = Param::UINT64 };
 };
 
-template<> struct ParamType<uchar>
-{
-    typedef uchar const_param_type;
-    typedef uchar member_type;
-
-    enum { type = Param::UCHAR };
-};
 
 /*!
 "\nThe CommandLineParser class is designed for command line arguments parsing\n"
@@ -4741,7 +4655,7 @@ class CV_EXPORTS CommandLineParser
     template<typename _Tp>
     static _Tp getData(const std::string& str)
     {
-        _Tp res = _Tp();
+        _Tp res;
         std::stringstream s1(str);
         s1 >> res;
         return res;
@@ -4812,9 +4726,6 @@ public:
     ~AutoLock() { mutex->unlock(); }
 protected:
     Mutex* mutex;
-private:
-    AutoLock(const AutoLock&);
-    AutoLock& operator = (const AutoLock&);
 };
 
 }

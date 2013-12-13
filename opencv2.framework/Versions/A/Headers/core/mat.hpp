@@ -431,7 +431,7 @@ template<typename _Tp> inline _Tp* Mat::ptr(int y)
 
 template<typename _Tp> inline const _Tp* Mat::ptr(int y) const
 {
-    CV_DbgAssert( y == 0 || (data && dims >= 1 && (unsigned)y < (unsigned)size.p[0]) );
+    CV_DbgAssert( y == 0 || (data && dims >= 1 && data && (unsigned)y < (unsigned)size.p[0]) );
     return (const _Tp*)(data + step.p[0]*y);
 }
 
@@ -2531,13 +2531,6 @@ SparseMatConstIterator_<_Tp>::SparseMatConstIterator_(const SparseMat_<_Tp>* _m)
 {}
 
 template<typename _Tp> inline
-SparseMatConstIterator_<_Tp>::SparseMatConstIterator_(const SparseMat* _m)
-: SparseMatConstIterator(_m)
-{
-    CV_Assert( _m->type() == DataType<_Tp>::type );
-}
-
-template<typename _Tp> inline
 SparseMatConstIterator_<_Tp>::SparseMatConstIterator_(const SparseMatConstIterator_<_Tp>& it)
 : SparseMatConstIterator(it)
 {}
@@ -2573,11 +2566,6 @@ SparseMatIterator_<_Tp>::SparseMatIterator_()
 
 template<typename _Tp> inline
 SparseMatIterator_<_Tp>::SparseMatIterator_(SparseMat_<_Tp>* _m)
-: SparseMatConstIterator_<_Tp>(_m)
-{}
-
-template<typename _Tp> inline
-SparseMatIterator_<_Tp>::SparseMatIterator_(SparseMat* _m)
 : SparseMatConstIterator_<_Tp>(_m)
 {}
 

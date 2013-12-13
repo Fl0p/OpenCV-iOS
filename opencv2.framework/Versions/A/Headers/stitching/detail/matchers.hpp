@@ -47,9 +47,8 @@
 #include "opencv2/features2d/features2d.hpp"
 
 #include "opencv2/opencv_modules.hpp"
-
-#if defined(HAVE_OPENCV_NONFREE) && defined(HAVE_OPENCV_GPU)
-    #include "opencv2/nonfree/gpu.hpp"
+#ifdef HAVE_OPENCV_GPU
+#include "opencv2/gpu/gpu.hpp"
 #endif
 
 namespace cv {
@@ -104,7 +103,7 @@ private:
 };
 
 
-#if defined(HAVE_OPENCV_NONFREE) && defined(HAVE_OPENCV_GPU)
+#ifdef HAVE_OPENCV_GPU
 class CV_EXPORTS SurfFeaturesFinderGpu : public FeaturesFinder
 {
 public:

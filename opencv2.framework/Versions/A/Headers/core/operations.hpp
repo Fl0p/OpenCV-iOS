@@ -56,7 +56,7 @@
   #define CV_XADD(addr,delta) _InterlockedExchangeAdd(const_cast<void*>(reinterpret_cast<volatile void*>(addr)), delta)
 #elif defined __GNUC__
 
-  #if defined __clang__ && __clang_major__ >= 3 && !defined __ANDROID__
+  #if defined __clang__ && __clang_major__ >= 3
     #ifdef __ATOMIC_SEQ_CST
         #define CV_XADD(addr, delta) __c11_atomic_fetch_add((_Atomic(int)*)(addr), (delta), __ATOMIC_SEQ_CST)
     #else
@@ -64,9 +64,8 @@
     #endif
   #elif __GNUC__*10 + __GNUC_MINOR__ >= 42
 
-    #if !(defined WIN32 || defined _WIN32) && (defined __i486__ || defined __i586__ || \
-        defined __i686__ || defined __MMX__ || defined __SSE__  || defined __ppc__) || \
-        (defined __GNUC__ && defined _STLPORT_MAJOR)
+    #if !defined WIN32 && (defined __i486__ || defined __i586__ || \
+        defined __i686__ || defined __MMX__ || defined __SSE__  || defined __ppc__)
       #define CV_XADD __sync_fetch_and_add
     #else
       #include <ext/atomicity.h>
@@ -686,7 +685,7 @@ template<typename _Tp> static inline
 Scalar operator * (const Matx<_Tp, 4, 4>& a, const Scalar& b)
 {
     Matx<double, 4, 1> c(Matx<double, 4, 4>(a), b, Matx_MatMulOp());
-    return static_cast<const Scalar&>(c);
+    return reinterpret_cast<const Scalar&>(c);
 }
 
 
@@ -694,7 +693,7 @@ static inline
 Scalar operator * (const Matx<double, 4, 4>& a, const Scalar& b)
 {
     Matx<double, 4, 1> c(a, b, Matx_MatMulOp());
-    return static_cast<const Scalar&>(c);
+    return reinterpret_cast<const Scalar&>(c);
 }
 
 
@@ -716,12 +715,12 @@ template<typename _Tp, int m> struct CV_EXPORTS Matx_DetOp
     double operator ()(const Matx<_Tp, m, m>& a) const
     {
         Matx<_Tp, m, m> temp = a;
-        double p = LU(temp.val, m*sizeof(_Tp), m, 0, 0, 0);
+        double p = LU(temp.val, m, m, 0, 0, 0);
         if( p == 0 )
             return p;
         for( int i = 0; i < m; i++ )
             p *= temp(i, i);
-        return 1./p;
+        return p;
     }
 };
 
@@ -2917,9 +2916,6 @@ CV_EXPORTS FileStorage& operator << (FileStorage& fs, const string& str);
 static inline FileStorage& operator << (FileStorage& fs, const char* str)
 { return (fs << string(str)); }
 
-static inline FileStorage& operator << (FileStorage& fs, char* value)
-{ return (fs << string(value)); }
-
 inline FileNode::FileNode() : fs(0), node(0) {}
 inline FileNode::FileNode(const CvFileStorage* _fs, const CvFileNode* _node)
     : fs(_fs), node(_node) {}
@@ -3877,21 +3873,10 @@ template<typename _Tp> inline std::ostream& operator<<(std::ostream& out, const 
 template<typename _Tp, int n> inline std::ostream& operator<<(std::ostream& out, const Vec<_Tp, n>& vec)
 {
     out << "[";
-
-    if(Vec<_Tp, n>::depth < CV_32F)
-    {
-        for (int i = 0; i < n - 1; ++i) {
-            out << (int)vec[i] << ", ";
-        }
-        out << (int)vec[n-1] << "]";
+    for (int i = 0; i < n - 1; ++i) {
+        out << vec[i] << ", ";
     }
-    else
-    {
-        for (int i = 0; i < n - 1; ++i) {
-            out << vec[i] << ", ";
-        }
-        out << vec[n-1] << "]";
-    }
+    out << vec[n-1] << "]";
 
     return out;
 }
