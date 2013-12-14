@@ -2,6 +2,8 @@
 
 Just Compilled OpenCV framework for iOS. 
 
+**Update**: Pod now uses framework downloaded from [here](http://sourceforge.net/projects/opencvlibrary/files/opencv-ios/2.4.7/opencv2.framework.zip/download), which supports 64 and 32-bit. Compiling for 64-bit didn't work, ran into same problems mentioned [here](http://stackoverflow.com/questions/18976893/how-to-compile-opencv-for-ios7-arm64). 
+
 Have different versions (see tags)
 
 
