@@ -16,7 +16,7 @@ Add import:
 	#import <opencv2/opencv.hpp>
 
 
-### Instalation with Cocoapods 
+### Installation with Cocoapods 
 
 Just add line in your Podfile: 
 
