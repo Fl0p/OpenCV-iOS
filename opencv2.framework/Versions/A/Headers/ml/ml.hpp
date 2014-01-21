@@ -534,6 +534,8 @@ protected:
     virtual void write_params( CvFileStorage* fs ) const;
     virtual void read_params( CvFileStorage* fs, CvFileNode* node );
 
+    void optimize_linear_svm();
+
     CvSVMParams params;
     CvMat* class_labels;
     int var_all;
@@ -796,7 +798,7 @@ struct CV_EXPORTS CvDTreeTrainData
     const CvMat* responses;
     CvMat* responses_copy; // used in Boosting
 
-    int buf_count, buf_size;
+    int buf_count, buf_size; // buf_size is obsolete, please do not use it, use expression ((int64)buf->rows * (int64)buf->cols / buf_count) instead
     bool shared;
     int is_buf_16u;
 
@@ -806,6 +808,12 @@ struct CV_EXPORTS CvDTreeTrainData
 
     CvMat* counts;
     CvMat* buf;
+    inline size_t get_length_subbuf() const
+    {
+        size_t res = (size_t)(work_var_count + 1) * (size_t)sample_count;
+        return res;
+    }
+
     CvMat* direction;
     CvMat* split_buf;
 
@@ -1244,6 +1252,8 @@ public:
     const CvDTreeTrainData* get_data() const;
 
 protected:
+
+    void update_weights_impl( CvBoostTree* tree, double initial_weights[2] );
 
     virtual bool set_params( const CvBoostParams& params );
     virtual void update_weights( CvBoostTree* tree );

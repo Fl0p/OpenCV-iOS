@@ -137,7 +137,7 @@
 #ifndef CV_INLINE
 #  if defined __cplusplus
 #    define CV_INLINE inline
-#  elif (defined WIN32 || defined _WIN32 || defined WINCE) && !defined __GNUC__
+#  elif defined _MSC_VER
 #    define CV_INLINE __inline
 #  else
 #    define CV_INLINE static
@@ -264,7 +264,10 @@ enum {
  CV_GpuNotSupported=           -216,
  CV_GpuApiCallError=           -217,
  CV_OpenGlNotSupported=        -218,
- CV_OpenGlApiCallError=        -219
+ CV_OpenGlApiCallError=        -219,
+ CV_OpenCLDoubleNotSupported=  -220,
+ CV_OpenCLInitError=           -221,
+ CV_OpenCLNoAMDBlasFft=        -222
 };
 
 /****************************************************************************************\
@@ -315,15 +318,21 @@ CV_INLINE  int  cvRound( double value )
         fistp t;
     }
     return t;
-#elif defined HAVE_LRINT || defined CV_ICC || defined __GNUC__
+#elif defined _MSC_VER && defined _M_ARM && defined HAVE_TEGRA_OPTIMIZATION
+    TEGRA_ROUND(value);
+#elif defined CV_ICC || defined __GNUC__
 #  ifdef HAVE_TEGRA_OPTIMIZATION
     TEGRA_ROUND(value);
 #  else
     return (int)lrint(value);
 #  endif
 #else
-    // while this is not IEEE754-compliant rounding, it's usually a good enough approximation
-    return (int)(value + (value >= 0 ? 0.5 : -0.5));
+    double intpart, fractpart;
+    fractpart = modf(value, &intpart);
+    if ((fabs(fractpart) != 0.5) || ((((int)intpart) % 2) != 0))
+        return (int)(value + (value >= 0 ? 0.5 : -0.5));
+    else
+        return (int)intpart;
 #endif
 }
 
@@ -342,9 +351,8 @@ CV_INLINE  int  cvFloor( double value )
     return i - (i > value);
 #else
     int i = cvRound(value);
-    Cv32suf diff;
-    diff.f = (float)(value - i);
-    return i - (diff.i < 0);
+    float diff = (float)(value - i);
+    return i - (diff < 0);
 #endif
 }
 
@@ -360,9 +368,8 @@ CV_INLINE  int  cvCeil( double value )
     return i + (i < value);
 #else
     int i = cvRound(value);
-    Cv32suf diff;
-    diff.f = (float)(i - value);
-    return i + (diff.i < 0);
+    float diff = (float)(i - value);
+    return i + (diff < 0);
 #endif
 }
 
@@ -371,31 +378,19 @@ CV_INLINE  int  cvCeil( double value )
 
 CV_INLINE int cvIsNaN( double value )
 {
-#if 1/*defined _MSC_VER || defined __BORLANDC__
-    return _isnan(value);
-#elif defined __GNUC__
-    return isnan(value);
-#else*/
     Cv64suf ieee754;
     ieee754.f = value;
     return ((unsigned)(ieee754.u >> 32) & 0x7fffffff) +
            ((unsigned)ieee754.u != 0) > 0x7ff00000;
-#endif
 }
 
 
 CV_INLINE int cvIsInf( double value )
 {
-#if 1/*defined _MSC_VER || defined __BORLANDC__
-    return !_finite(value);
-#elif defined __GNUC__
-    return isinf(value);
-#else*/
     Cv64suf ieee754;
     ieee754.f = value;
     return ((unsigned)(ieee754.u >> 32) & 0x7fffffff) == 0x7ff00000 &&
            (unsigned)ieee754.u == 0;
-#endif
 }
 
 
@@ -774,11 +769,11 @@ CV_INLINE  double  cvmGet( const CvMat* mat, int row, int col )
             (unsigned)col < (unsigned)mat->cols );
 
     if( type == CV_32FC1 )
-        return ((float*)(mat->data.ptr + (size_t)mat->step*row))[col];
+        return ((float*)(void*)(mat->data.ptr + (size_t)mat->step*row))[col];
     else
     {
         assert( type == CV_64FC1 );
-        return ((double*)(mat->data.ptr + (size_t)mat->step*row))[col];
+        return ((double*)(void*)(mat->data.ptr + (size_t)mat->step*row))[col];
     }
 }
 
@@ -791,11 +786,11 @@ CV_INLINE  void  cvmSet( CvMat* mat, int row, int col, double value )
             (unsigned)col < (unsigned)mat->cols );
 
     if( type == CV_32FC1 )
-        ((float*)(mat->data.ptr + (size_t)mat->step*row))[col] = (float)value;
+        ((float*)(void*)(mat->data.ptr + (size_t)mat->step*row))[col] = (float)value;
     else
     {
         assert( type == CV_64FC1 );
-        ((double*)(mat->data.ptr + (size_t)mat->step*row))[col] = (double)value;
+        ((double*)(void*)(mat->data.ptr + (size_t)mat->step*row))[col] = (double)value;
     }
 }
 

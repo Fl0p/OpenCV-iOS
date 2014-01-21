@@ -56,7 +56,7 @@
   #define CV_XADD(addr,delta) _InterlockedExchangeAdd(const_cast<void*>(reinterpret_cast<volatile void*>(addr)), delta)
 #elif defined __GNUC__
 
-  #if defined __clang__ && __clang_major__ >= 3
+  #if defined __clang__ && __clang_major__ >= 3 && !defined __ANDROID__
     #ifdef __ATOMIC_SEQ_CST
         #define CV_XADD(addr, delta) __c11_atomic_fetch_add((_Atomic(int)*)(addr), (delta), __ATOMIC_SEQ_CST)
     #else
@@ -64,8 +64,9 @@
     #endif
   #elif __GNUC__*10 + __GNUC_MINOR__ >= 42
 
-    #if !defined WIN32 && (defined __i486__ || defined __i586__ || \
-        defined __i686__ || defined __MMX__ || defined __SSE__  || defined __ppc__)
+    #if !(defined WIN32 || defined _WIN32) && (defined __i486__ || defined __i586__ || \
+        defined __i686__ || defined __MMX__ || defined __SSE__  || defined __ppc__) || \
+        (defined __GNUC__ && defined _STLPORT_MAJOR)
       #define CV_XADD __sync_fetch_and_add
     #else
       #include <ext/atomicity.h>
@@ -685,7 +686,7 @@ template<typename _Tp> static inline
 Scalar operator * (const Matx<_Tp, 4, 4>& a, const Scalar& b)
 {
     Matx<double, 4, 1> c(Matx<double, 4, 4>(a), b, Matx_MatMulOp());
-    return reinterpret_cast<const Scalar&>(c);
+    return static_cast<const Scalar&>(c);
 }
 
 
@@ -693,7 +694,7 @@ static inline
 Scalar operator * (const Matx<double, 4, 4>& a, const Scalar& b)
 {
     Matx<double, 4, 1> c(a, b, Matx_MatMulOp());
-    return reinterpret_cast<const Scalar&>(c);
+    return static_cast<const Scalar&>(c);
 }
 
 
@@ -710,22 +711,22 @@ CV_EXPORTS bool Cholesky(float* A, size_t astep, int m, float* b, size_t bstep, 
 CV_EXPORTS bool Cholesky(double* A, size_t astep, int m, double* b, size_t bstep, int n);
 
 
-template<typename _Tp, int m> struct CV_EXPORTS Matx_DetOp
+template<typename _Tp, int m> struct Matx_DetOp
 {
     double operator ()(const Matx<_Tp, m, m>& a) const
     {
         Matx<_Tp, m, m> temp = a;
-        double p = LU(temp.val, m, m, 0, 0, 0);
+        double p = LU(temp.val, m*sizeof(_Tp), m, 0, 0, 0);
         if( p == 0 )
             return p;
         for( int i = 0; i < m; i++ )
             p *= temp(i, i);
-        return p;
+        return 1./p;
     }
 };
 
 
-template<typename _Tp> struct CV_EXPORTS Matx_DetOp<_Tp, 1>
+template<typename _Tp> struct Matx_DetOp<_Tp, 1>
 {
     double operator ()(const Matx<_Tp, 1, 1>& a) const
     {
@@ -734,7 +735,7 @@ template<typename _Tp> struct CV_EXPORTS Matx_DetOp<_Tp, 1>
 };
 
 
-template<typename _Tp> struct CV_EXPORTS Matx_DetOp<_Tp, 2>
+template<typename _Tp> struct Matx_DetOp<_Tp, 2>
 {
     double operator ()(const Matx<_Tp, 2, 2>& a) const
     {
@@ -743,7 +744,7 @@ template<typename _Tp> struct CV_EXPORTS Matx_DetOp<_Tp, 2>
 };
 
 
-template<typename _Tp> struct CV_EXPORTS Matx_DetOp<_Tp, 3>
+template<typename _Tp> struct Matx_DetOp<_Tp, 3>
 {
     double operator ()(const Matx<_Tp, 3, 3>& a) const
     {
@@ -777,7 +778,7 @@ Matx<_Tp, n, m> Matx<_Tp, m, n>::t() const
 }
 
 
-template<typename _Tp, int m> struct CV_EXPORTS Matx_FastInvOp
+template<typename _Tp, int m> struct Matx_FastInvOp
 {
     bool operator()(const Matx<_Tp, m, m>& a, Matx<_Tp, m, m>& b, int method) const
     {
@@ -795,7 +796,7 @@ template<typename _Tp, int m> struct CV_EXPORTS Matx_FastInvOp
 };
 
 
-template<typename _Tp> struct CV_EXPORTS Matx_FastInvOp<_Tp, 2>
+template<typename _Tp> struct Matx_FastInvOp<_Tp, 2>
 {
     bool operator()(const Matx<_Tp, 2, 2>& a, Matx<_Tp, 2, 2>& b, int) const
     {
@@ -812,7 +813,7 @@ template<typename _Tp> struct CV_EXPORTS Matx_FastInvOp<_Tp, 2>
 };
 
 
-template<typename _Tp> struct CV_EXPORTS Matx_FastInvOp<_Tp, 3>
+template<typename _Tp> struct Matx_FastInvOp<_Tp, 3>
 {
     bool operator()(const Matx<_Tp, 3, 3>& a, Matx<_Tp, 3, 3>& b, int) const
     {
@@ -852,7 +853,7 @@ Matx<_Tp, n, m> Matx<_Tp, m, n>::inv(int method) const
 }
 
 
-template<typename _Tp, int m, int n> struct CV_EXPORTS Matx_FastSolveOp
+template<typename _Tp, int m, int n> struct Matx_FastSolveOp
 {
     bool operator()(const Matx<_Tp, m, m>& a, const Matx<_Tp, m, n>& b,
                     Matx<_Tp, m, n>& x, int method) const
@@ -867,7 +868,7 @@ template<typename _Tp, int m, int n> struct CV_EXPORTS Matx_FastSolveOp
 };
 
 
-template<typename _Tp> struct CV_EXPORTS Matx_FastSolveOp<_Tp, 2, 1>
+template<typename _Tp> struct Matx_FastSolveOp<_Tp, 2, 1>
 {
     bool operator()(const Matx<_Tp, 2, 2>& a, const Matx<_Tp, 2, 1>& b,
                     Matx<_Tp, 2, 1>& x, int) const
@@ -883,7 +884,7 @@ template<typename _Tp> struct CV_EXPORTS Matx_FastSolveOp<_Tp, 2, 1>
 };
 
 
-template<typename _Tp> struct CV_EXPORTS Matx_FastSolveOp<_Tp, 3, 1>
+template<typename _Tp> struct Matx_FastSolveOp<_Tp, 3, 1>
 {
     bool operator()(const Matx<_Tp, 3, 3>& a, const Matx<_Tp, 3, 1>& b,
                     Matx<_Tp, 3, 1>& x, int) const
@@ -2264,7 +2265,7 @@ inline Range::operator CvSlice() const
 //   1) it can be created on top of user-allocated data w/o copying it
 //   2) vector b = a means copying the header,
 //      not the underlying data (use clone() to make a deep copy)
-template <typename _Tp> class CV_EXPORTS Vector
+template <typename _Tp> class Vector
 {
 public:
     typedef _Tp value_type;
@@ -2273,7 +2274,7 @@ public:
     typedef _Tp& reference;
     typedef const _Tp& const_reference;
 
-    struct CV_EXPORTS Hdr
+    struct Hdr
     {
         Hdr() : data(0), datastart(0), refcount(0), size(0), capacity(0) {};
         _Tp* data;
@@ -2857,7 +2858,7 @@ inline void write(FileStorage& fs, const string& name, const Range& r )
     write(fs, r.end);
 }
 
-template<typename _Tp, int numflag> class CV_EXPORTS VecWriterProxy
+template<typename _Tp, int numflag> class VecWriterProxy
 {
 public:
     VecWriterProxy( FileStorage* _fs ) : fs(_fs) {}
@@ -2870,7 +2871,7 @@ public:
     FileStorage* fs;
 };
 
-template<typename _Tp> class CV_EXPORTS VecWriterProxy<_Tp,1>
+template<typename _Tp> class VecWriterProxy<_Tp,1>
 {
 public:
     VecWriterProxy( FileStorage* _fs ) : fs(_fs) {}
@@ -2915,6 +2916,9 @@ CV_EXPORTS FileStorage& operator << (FileStorage& fs, const string& str);
 
 static inline FileStorage& operator << (FileStorage& fs, const char* str)
 { return (fs << string(str)); }
+
+static inline FileStorage& operator << (FileStorage& fs, char* value)
+{ return (fs << string(value)); }
 
 inline FileNode::FileNode() : fs(0), node(0) {}
 inline FileNode::FileNode(const CvFileStorage* _fs, const CvFileNode* _node)
@@ -2997,6 +3001,58 @@ static inline void read(const FileNode& node, string& value, const string& defau
     value = !node.node ? default_value : CV_NODE_IS_STRING(node.node->tag) ? string(node.node->data.str.ptr) : string("");
 }
 
+template<typename _Tp> static inline void read(const FileNode& node, Point_<_Tp>& value, const Point_<_Tp>& default_value)
+{
+    vector<_Tp> temp; FileNodeIterator it = node.begin(); it >> temp;
+    value = temp.size() != 2 ? default_value : Point_<_Tp>(saturate_cast<_Tp>(temp[0]), saturate_cast<_Tp>(temp[1]));
+}
+
+template<typename _Tp> static inline void read(const FileNode& node, Point3_<_Tp>& value, const Point3_<_Tp>& default_value)
+{
+    vector<_Tp> temp; FileNodeIterator it = node.begin(); it >> temp;
+    value = temp.size() != 3 ? default_value : Point3_<_Tp>(saturate_cast<_Tp>(temp[0]), saturate_cast<_Tp>(temp[1]),
+                                                            saturate_cast<_Tp>(temp[2]));
+}
+
+template<typename _Tp> static inline void read(const FileNode& node, Size_<_Tp>& value, const Size_<_Tp>& default_value)
+{
+    vector<_Tp> temp; FileNodeIterator it = node.begin(); it >> temp;
+    value = temp.size() != 2 ? default_value : Size_<_Tp>(saturate_cast<_Tp>(temp[0]), saturate_cast<_Tp>(temp[1]));
+}
+
+template<typename _Tp> static inline void read(const FileNode& node, Complex<_Tp>& value, const Complex<_Tp>& default_value)
+{
+    vector<_Tp> temp; FileNodeIterator it = node.begin(); it >> temp;
+    value = temp.size() != 2 ? default_value : Complex<_Tp>(saturate_cast<_Tp>(temp[0]), saturate_cast<_Tp>(temp[1]));
+}
+
+template<typename _Tp> static inline void read(const FileNode& node, Rect_<_Tp>& value, const Rect_<_Tp>& default_value)
+{
+    vector<_Tp> temp; FileNodeIterator it = node.begin(); it >> temp;
+    value = temp.size() != 4 ? default_value : Rect_<_Tp>(saturate_cast<_Tp>(temp[0]), saturate_cast<_Tp>(temp[1]),
+                                                          saturate_cast<_Tp>(temp[2]), saturate_cast<_Tp>(temp[3]));
+}
+
+template<typename _Tp, int cn> static inline void read(const FileNode& node, Vec<_Tp, cn>& value, const Vec<_Tp, cn>& default_value)
+{
+    vector<_Tp> temp; FileNodeIterator it = node.begin(); it >> temp;
+    value = temp.size() != cn ? default_value : Vec<_Tp, cn>(&temp[0]);
+}
+
+template<typename _Tp> static inline void read(const FileNode& node, Scalar_<_Tp>& value, const Scalar_<_Tp>& default_value)
+{
+    vector<_Tp> temp; FileNodeIterator it = node.begin(); it >> temp;
+    value = temp.size() != 4 ? default_value : Scalar_<_Tp>(saturate_cast<_Tp>(temp[0]), saturate_cast<_Tp>(temp[1]),
+                                                            saturate_cast<_Tp>(temp[2]), saturate_cast<_Tp>(temp[3]));
+}
+
+static inline void read(const FileNode& node, Range& value, const Range& default_value)
+{
+    Point2i temp(value.start, value.end); const Point2i default_temp = Point2i(default_value.start, default_value.end);
+    read(node, temp, default_temp);
+    value.start = temp.x; value.end = temp.y;
+}
+
 CV_EXPORTS_W void read(const FileNode& node, Mat& mat, const Mat& default_mat=Mat() );
 CV_EXPORTS void read(const FileNode& node, SparseMat& mat, const SparseMat& default_mat=SparseMat() );
 
@@ -3030,7 +3086,7 @@ inline void FileNode::readRaw( const string& fmt, uchar* vec, size_t len ) const
     begin().readRaw( fmt, vec, len );
 }
 
-template<typename _Tp, int numflag> class CV_EXPORTS VecReaderProxy
+template<typename _Tp, int numflag> class VecReaderProxy
 {
 public:
     VecReaderProxy( FileNodeIterator* _it ) : it(_it) {}
@@ -3044,7 +3100,7 @@ public:
     FileNodeIterator* it;
 };
 
-template<typename _Tp> class CV_EXPORTS VecReaderProxy<_Tp,1>
+template<typename _Tp> class VecReaderProxy<_Tp,1>
 {
 public:
     VecReaderProxy( FileNodeIterator* _it ) : it(_it) {}
@@ -3091,10 +3147,10 @@ inline FileNodeIterator FileNode::end() const
 }
 
 inline FileNode FileNodeIterator::operator *() const
-{ return FileNode(fs, (const CvFileNode*)reader.ptr); }
+{ return FileNode(fs, (const CvFileNode*)(void*)reader.ptr); }
 
 inline FileNode FileNodeIterator::operator ->() const
-{ return FileNode(fs, (const CvFileNode*)reader.ptr); }
+{ return FileNode(fs, (const CvFileNode*)(void*)reader.ptr); }
 
 template<typename _Tp> static inline FileNodeIterator& operator >> (FileNodeIterator& it, _Tp& value)
 { read( *it, value, _Tp()); return ++it; }
@@ -3358,19 +3414,19 @@ template<typename _Tp, class _LT> void sort( vector<_Tp>& vec, _LT LT=_LT() )
     }
 }
 
-template<typename _Tp> class CV_EXPORTS LessThan
+template<typename _Tp> class LessThan
 {
 public:
     bool operator()(const _Tp& a, const _Tp& b) const { return a < b; }
 };
 
-template<typename _Tp> class CV_EXPORTS GreaterEq
+template<typename _Tp> class GreaterEq
 {
 public:
     bool operator()(const _Tp& a, const _Tp& b) const { return a >= b; }
 };
 
-template<typename _Tp> class CV_EXPORTS LessThanIdx
+template<typename _Tp> class LessThanIdx
 {
 public:
     LessThanIdx( const _Tp* _arr ) : arr(_arr) {}
@@ -3378,7 +3434,7 @@ public:
     const _Tp* arr;
 };
 
-template<typename _Tp> class CV_EXPORTS GreaterEqIdx
+template<typename _Tp> class GreaterEqIdx
 {
 public:
     GreaterEqIdx( const _Tp* _arr ) : arr(_arr) {}
@@ -3707,7 +3763,7 @@ template<typename _Tp> inline bool operator != (const SeqIterator<_Tp>& a,
 }
 
 
-template<typename _ClsName> struct CV_EXPORTS RTTIImpl
+template<typename _ClsName> struct RTTIImpl
 {
 public:
     static int isInstance(const void* ptr)
@@ -3873,10 +3929,21 @@ template<typename _Tp> inline std::ostream& operator<<(std::ostream& out, const 
 template<typename _Tp, int n> inline std::ostream& operator<<(std::ostream& out, const Vec<_Tp, n>& vec)
 {
     out << "[";
-    for (int i = 0; i < n - 1; ++i) {
-        out << vec[i] << ", ";
+
+    if(Vec<_Tp, n>::depth < CV_32F)
+    {
+        for (int i = 0; i < n - 1; ++i) {
+            out << (int)vec[i] << ", ";
+        }
+        out << (int)vec[n-1] << "]";
     }
-    out << vec[n-1] << "]";
+    else
+    {
+        for (int i = 0; i < n - 1; ++i) {
+            out << vec[i] << ", ";
+        }
+        out << vec[n-1] << "]";
+    }
 
     return out;
 }
