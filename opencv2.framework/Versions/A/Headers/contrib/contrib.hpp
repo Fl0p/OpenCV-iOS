@@ -435,7 +435,7 @@ namespace cv
 
     typedef bool (*BundleAdjustCallback)(int iteration, double norm_error, void* user_data);
 
-    class LevMarqSparse {
+    class CV_EXPORTS LevMarqSparse {
     public:
         LevMarqSparse();
         LevMarqSparse(int npoints, // number of points
@@ -583,7 +583,7 @@ namespace cv
         virtual ~StereoVar();
 
         //! the stereo correspondence operator that computes disparity map for the specified rectified stereo pair
-        CV_WRAP_AS(compute) virtual void operator()(const Mat& left, const Mat& right, Mat& disp);
+        CV_WRAP_AS(compute) virtual void operator()(const Mat& left, const Mat& right, CV_OUT Mat& disp);
 
         CV_PROP_RW int      levels;
         CV_PROP_RW double   pyrScale;
@@ -983,4 +983,3 @@ namespace cv
 #endif
 
 #endif
-

@@ -78,11 +78,11 @@ using std::vector;
 using std::string;
 using std::ptrdiff_t;
 
-template<typename _Tp> class CV_EXPORTS Size_;
-template<typename _Tp> class CV_EXPORTS Point_;
-template<typename _Tp> class CV_EXPORTS Rect_;
-template<typename _Tp, int cn> class CV_EXPORTS Vec;
-template<typename _Tp, int m, int n> class CV_EXPORTS Matx;
+template<typename _Tp> class Size_;
+template<typename _Tp> class Point_;
+template<typename _Tp> class Rect_;
+template<typename _Tp, int cn> class Vec;
+template<typename _Tp, int m, int n> class Matx;
 
 typedef std::string String;
 
@@ -90,10 +90,18 @@ class Mat;
 class SparseMat;
 typedef Mat MatND;
 
+namespace ogl {
+    class Buffer;
+    class Texture2D;
+    class Arrays;
+}
+
+// < Deprecated
 class GlBuffer;
 class GlTexture;
 class GlArrays;
 class GlCamera;
+// >
 
 namespace gpu {
     class GpuMat;
@@ -104,10 +112,10 @@ class CV_EXPORTS MatOp_Base;
 class CV_EXPORTS MatArg;
 class CV_EXPORTS MatConstIterator;
 
-template<typename _Tp> class CV_EXPORTS Mat_;
-template<typename _Tp> class CV_EXPORTS MatIterator_;
-template<typename _Tp> class CV_EXPORTS MatConstIterator_;
-template<typename _Tp> class CV_EXPORTS MatCommaInitializer_;
+template<typename _Tp> class Mat_;
+template<typename _Tp> class MatIterator_;
+template<typename _Tp> class MatConstIterator_;
+template<typename _Tp> class MatCommaInitializer_;
 
 #if !defined(ANDROID) || (defined(_GLIBCXX_USE_WCHAR_T) && _GLIBCXX_USE_WCHAR_T)
 typedef std::basic_string<wchar_t> WString;
@@ -204,11 +212,11 @@ CV_EXPORTS ErrorCallback redirectError( ErrorCallback errCallback,
 #ifdef __GNUC__
 #define CV_Error( code, msg ) cv::error( cv::Exception(code, msg, __func__, __FILE__, __LINE__) )
 #define CV_Error_( code, args ) cv::error( cv::Exception(code, cv::format args, __func__, __FILE__, __LINE__) )
-#define CV_Assert( expr ) if((expr)) ; else cv::error( cv::Exception(CV_StsAssert, #expr, __func__, __FILE__, __LINE__) )
+#define CV_Assert( expr ) if(!!(expr)) ; else cv::error( cv::Exception(CV_StsAssert, #expr, __func__, __FILE__, __LINE__) )
 #else
 #define CV_Error( code, msg ) cv::error( cv::Exception(code, msg, "", __FILE__, __LINE__) )
 #define CV_Error_( code, args ) cv::error( cv::Exception(code, cv::format args, "", __FILE__, __LINE__) )
-#define CV_Assert( expr ) if((expr)) ; else cv::error( cv::Exception(CV_StsAssert, #expr, "", __FILE__, __LINE__) )
+#define CV_Assert( expr ) if(!!(expr)) ; else cv::error( cv::Exception(CV_StsAssert, #expr, "", __FILE__, __LINE__) )
 #endif
 
 #ifdef _DEBUG
@@ -216,6 +224,8 @@ CV_EXPORTS ErrorCallback redirectError( ErrorCallback errCallback,
 #else
 #define CV_DbgAssert(expr)
 #endif
+
+CV_EXPORTS void glob(String pattern, std::vector<String>& result, bool recursive = false);
 
 CV_EXPORTS void setNumThreads(int nthreads);
 CV_EXPORTS int getNumThreads();
@@ -329,6 +339,7 @@ template<typename _Tp> static inline _Tp* alignPtr(_Tp* ptr, int n=(int)sizeof(_
 */
 static inline size_t alignSize(size_t sz, int n)
 {
+    assert((n & (n - 1)) == 0); // n is a power of 2
     return (sz + n-1) & -n;
 }
 
@@ -353,7 +364,7 @@ CV_EXPORTS_W bool useOptimized();
 /*!
   The STL-compilant memory Allocator based on cv::fastMalloc() and cv::fastFree()
 */
-template<typename _Tp> class CV_EXPORTS Allocator
+template<typename _Tp> class Allocator
 {
 public:
     typedef _Tp value_type;
@@ -395,7 +406,7 @@ public:
   The class is specialized for each fundamental numerical data type supported by OpenCV.
   It provides DataDepth<T>::value constant.
 */
-template<typename _Tp> class CV_EXPORTS DataDepth {};
+template<typename _Tp> class DataDepth {};
 
 template<> class DataDepth<bool> { public: enum { value = CV_8U, fmt=(int)'u' }; };
 template<> class DataDepth<uchar> { public: enum { value = CV_8U, fmt=(int)'u' }; };
@@ -436,7 +447,7 @@ struct CV_EXPORTS Matx_MulOp {};
 struct CV_EXPORTS Matx_MatMulOp {};
 struct CV_EXPORTS Matx_TOp {};
 
-template<typename _Tp, int m, int n> class CV_EXPORTS Matx
+template<typename _Tp, int m, int n> class Matx
 {
 public:
     typedef _Tp value_type;
@@ -585,7 +596,7 @@ typedef Matx<double, 6, 6> Matx66d;
   In addition to the universal notation like Vec<float, 3>, you can use shorter aliases
   for the most popular specialized variants of Vec, e.g. Vec3f ~ Vec<float, 3>.
 */
-template<typename _Tp, int cn> class CV_EXPORTS Vec : public Matx<_Tp, cn, 1>
+template<typename _Tp, int cn> class Vec : public Matx<_Tp, cn, 1>
 {
 public:
     typedef _Tp value_type;
@@ -681,7 +692,7 @@ typedef Vec<double, 6> Vec6d;
   more convenient access to the real and imaginary parts using through the simple field access, as opposite
   to std::complex::real() and std::complex::imag().
 */
-template<typename _Tp> class CV_EXPORTS Complex
+template<typename _Tp> class Complex
 {
 public:
 
@@ -717,7 +728,7 @@ typedef Complex<double> Complexd;
   as a template parameter. There are a few shorter aliases available for user convenience.
   See cv::Point, cv::Point2i, cv::Point2f and cv::Point2d.
 */
-template<typename _Tp> class CV_EXPORTS Point_
+template<typename _Tp> class Point_
 {
 public:
     typedef _Tp value_type;
@@ -760,7 +771,7 @@ public:
 
   \see cv::Point3i, cv::Point3f and cv::Point3d
 */
-template<typename _Tp> class CV_EXPORTS Point3_
+template<typename _Tp> class Point3_
 {
 public:
     typedef _Tp value_type;
@@ -799,7 +810,7 @@ public:
   The class represents the size of a 2D rectangle, image size, matrix size etc.
   Normally, cv::Size ~ cv::Size_<int> is used.
 */
-template<typename _Tp> class CV_EXPORTS Size_
+template<typename _Tp> class Size_
 {
 public:
     typedef _Tp value_type;
@@ -834,7 +845,7 @@ public:
   The class represents a 2D rectangle with coordinates of the specified data type.
   Normally, cv::Rect ~ cv::Rect_<int> is used.
 */
-template<typename _Tp> class CV_EXPORTS Rect_
+template<typename _Tp> class Rect_
 {
 public:
     typedef _Tp value_type;
@@ -923,7 +934,7 @@ public:
    This is partially specialized cv::Vec class with the number of elements = 4, i.e. a short vector of four elements.
    Normally, cv::Scalar ~ cv::Scalar_<double> is used.
 */
-template<typename _Tp> class CV_EXPORTS Scalar_ : public Vec<_Tp, 4>
+template<typename _Tp> class Scalar_ : public Vec<_Tp, 4>
 {
 public:
     //! various constructors
@@ -1250,7 +1261,7 @@ public:
   \note{Another good property of the class is that the operations on the reference counter are atomic,
   i.e. it is safe to use the class in multi-threaded applications}
 */
-template<typename _Tp> class CV_EXPORTS Ptr
+template<typename _Tp> class Ptr
 {
 public:
     //! empty constructor
@@ -1312,7 +1323,8 @@ public:
         EXPR              = 6 << KIND_SHIFT,
         OPENGL_BUFFER     = 7 << KIND_SHIFT,
         OPENGL_TEXTURE    = 8 << KIND_SHIFT,
-        GPU_MAT           = 9 << KIND_SHIFT
+        GPU_MAT           = 9 << KIND_SHIFT,
+        OCL_MAT           =10 << KIND_SHIFT
     };
     _InputArray();
 
@@ -1327,15 +1339,23 @@ public:
     template<typename _Tp, int m, int n> _InputArray(const Matx<_Tp, m, n>& matx);
     _InputArray(const Scalar& s);
     _InputArray(const double& val);
+    // < Deprecated
     _InputArray(const GlBuffer& buf);
     _InputArray(const GlTexture& tex);
+    // >
     _InputArray(const gpu::GpuMat& d_mat);
+    _InputArray(const ogl::Buffer& buf);
+    _InputArray(const ogl::Texture2D& tex);
 
     virtual Mat getMat(int i=-1) const;
     virtual void getMatVector(vector<Mat>& mv) const;
+    // < Deprecated
     virtual GlBuffer getGlBuffer() const;
     virtual GlTexture getGlTexture() const;
+    // >
     virtual gpu::GpuMat getGpuMat() const;
+    /*virtual*/ ogl::Buffer getOGlBuffer() const;
+    /*virtual*/ ogl::Texture2D getOGlTexture2D() const;
 
     virtual int kind() const;
     virtual Size size(int i=-1) const;
@@ -1387,6 +1407,8 @@ public:
     template<typename _Tp, int m, int n> _OutputArray(Matx<_Tp, m, n>& matx);
     template<typename _Tp> _OutputArray(_Tp* vec, int n);
     _OutputArray(gpu::GpuMat& d_mat);
+    _OutputArray(ogl::Buffer& buf);
+    _OutputArray(ogl::Texture2D& tex);
 
     _OutputArray(const Mat& m);
     template<typename _Tp> _OutputArray(const vector<_Tp>& vec);
@@ -1397,12 +1419,16 @@ public:
     template<typename _Tp, int m, int n> _OutputArray(const Matx<_Tp, m, n>& matx);
     template<typename _Tp> _OutputArray(const _Tp* vec, int n);
     _OutputArray(const gpu::GpuMat& d_mat);
+    _OutputArray(const ogl::Buffer& buf);
+    _OutputArray(const ogl::Texture2D& tex);
 
     virtual bool fixedSize() const;
     virtual bool fixedType() const;
     virtual bool needed() const;
     virtual Mat& getMatRef(int i=-1) const;
     /*virtual*/ gpu::GpuMat& getGpuMatRef() const;
+    /*virtual*/ ogl::Buffer& getOGlBufferRef() const;
+    /*virtual*/ ogl::Texture2D& getOGlTexture2DRef() const;
     virtual void create(Size sz, int type, int i=-1, bool allowTransposed=false, int fixedDepthMask=0) const;
     virtual void create(int rows, int cols, int type, int i=-1, bool allowTransposed=false, int fixedDepthMask=0) const;
     virtual void create(int dims, const int* size, int type, int i=-1, bool allowTransposed=false, int fixedDepthMask=0) const;
@@ -2020,6 +2046,40 @@ public:
     uint64 state;
 };
 
+/*!
+   Random Number Generator - MT
+
+   The class implements RNG using the Mersenne Twister algorithm
+*/
+class CV_EXPORTS RNG_MT19937
+{
+public:
+    RNG_MT19937();
+    RNG_MT19937(unsigned s);
+    void seed(unsigned s);
+
+    unsigned next();
+
+    operator int();
+    operator unsigned();
+    operator float();
+    operator double();
+
+    unsigned operator ()(unsigned N);
+    unsigned operator ()();
+
+    //! returns uniformly distributed integer random number from [a,b) range
+    int uniform(int a, int b);
+    //! returns uniformly distributed floating-point random number from [a,b) range
+    float uniform(float a, float b);
+    //! returns uniformly distributed double-precision floating-point random number from [a,b) range
+    double uniform(double a, double b);
+
+private:
+    enum PeriodParameters {N = 624, M = 397};
+    unsigned state[N];
+    int mti;
+};
 
 /*!
  Termination criteria in iterative algorithms
@@ -2037,10 +2097,10 @@ public:
     //! default constructor
     TermCriteria();
     //! full constructor
-    TermCriteria(int _type, int _maxCount, double _epsilon);
+    TermCriteria(int type, int maxCount, double epsilon);
     //! conversion from CvTermCriteria
     TermCriteria(const CvTermCriteria& criteria);
-    //! conversion from CvTermCriteria
+    //! conversion to CvTermCriteria
     operator CvTermCriteria() const;
 
     int type; //!< the type of termination criteria: COUNT, EPS or COUNT + EPS
@@ -2689,7 +2749,7 @@ CV_EXPORTS_W Size getTextSize(const string& text, int fontFace,
        img(i,j)[2] ^= (uchar)(i ^ j); // img(y,x)[c] accesses c-th channel of the pixel (x,y)
  \endcode
 */
-template<typename _Tp> class CV_EXPORTS Mat_ : public Mat
+template<typename _Tp> class Mat_ : public Mat
 {
 public:
     typedef _Tp value_type;
@@ -2921,7 +2981,7 @@ public:
 
  */
 template<typename _Tp>
-class CV_EXPORTS MatConstIterator_ : public MatConstIterator
+class MatConstIterator_ : public MatConstIterator
 {
 public:
     typedef _Tp value_type;
@@ -2972,7 +3032,7 @@ public:
 
 */
 template<typename _Tp>
-class CV_EXPORTS MatIterator_ : public MatConstIterator_<_Tp>
+class MatIterator_ : public MatConstIterator_<_Tp>
 {
 public:
     typedef _Tp* pointer;
@@ -3013,7 +3073,7 @@ public:
     MatIterator_ operator ++(int);
 };
 
-template<typename _Tp> class CV_EXPORTS MatOp_Iter_;
+template<typename _Tp> class MatOp_Iter_;
 
 /*!
  Comma-separated Matrix Initializer
@@ -3028,7 +3088,7 @@ template<typename _Tp> class CV_EXPORTS MatOp_Iter_;
  Mat R = (Mat_<double>(2,2) << a, -b, b, a);
  \endcode
 */
-template<typename _Tp> class CV_EXPORTS MatCommaInitializer_
+template<typename _Tp> class MatCommaInitializer_
 {
 public:
     //! the constructor, created by "matrix << firstValue" operator, where matrix is cv::Mat
@@ -3043,7 +3103,7 @@ protected:
 };
 
 
-template<typename _Tp, int m, int n> class CV_EXPORTS MatxCommaInitializer
+template<typename _Tp, int m, int n> class MatxCommaInitializer
 {
 public:
     MatxCommaInitializer(Matx<_Tp, m, n>* _mtx);
@@ -3054,7 +3114,7 @@ public:
     int idx;
 };
 
-template<typename _Tp, int m> class CV_EXPORTS VecCommaInitializer : public MatxCommaInitializer<_Tp, m, 1>
+template<typename _Tp, int m> class VecCommaInitializer : public MatxCommaInitializer<_Tp, m, 1>
 {
 public:
     VecCommaInitializer(Vec<_Tp, m>* _vec);
@@ -3089,7 +3149,7 @@ public:
  }
  \endcode
 */
-template<typename _Tp, size_t fixed_size=4096/sizeof(_Tp)+8> class CV_EXPORTS AutoBuffer
+template<typename _Tp, size_t fixed_size=4096/sizeof(_Tp)+8> class AutoBuffer
 {
 public:
     typedef _Tp value_type;
@@ -3351,8 +3411,6 @@ public:
     //! converts dense 2d matrix to the sparse form
     /*!
      \param m the input matrix
-     \param try1d if true and m is a single-column matrix (Nx1),
-            then the sparse matrix will be 1-dimensional.
     */
     explicit SparseMat(const Mat& m);
     //! converts old-style sparse matrix to the new-style. All the data is copied
@@ -3662,7 +3720,7 @@ public:
  m_.ref(2) += m_(3); // equivalent to m.ref<int>(2) += m.value<int>(3);
  \endcode
 */
-template<typename _Tp> class CV_EXPORTS SparseMat_ : public SparseMat
+template<typename _Tp> class SparseMat_ : public SparseMat
 {
 public:
     typedef SparseMatIterator_<_Tp> iterator;
@@ -3736,7 +3794,7 @@ public:
  This is the derived from SparseMatConstIterator class that
  introduces more convenient operator *() for accessing the current element.
 */
-template<typename _Tp> class CV_EXPORTS SparseMatConstIterator_ : public SparseMatConstIterator
+template<typename _Tp> class SparseMatConstIterator_ : public SparseMatConstIterator
 {
 public:
     typedef std::forward_iterator_tag iterator_category;
@@ -3745,6 +3803,7 @@ public:
     SparseMatConstIterator_();
     //! the full constructor setting the iterator to the first sparse matrix element
     SparseMatConstIterator_(const SparseMat_<_Tp>* _m);
+    SparseMatConstIterator_(const SparseMat* _m);
     //! the copy constructor
     SparseMatConstIterator_(const SparseMatConstIterator_& it);
 
@@ -3765,7 +3824,7 @@ public:
  This is the derived from cv::SparseMatConstIterator_ class that
  introduces more convenient operator *() for accessing the current element.
 */
-template<typename _Tp> class CV_EXPORTS SparseMatIterator_ : public SparseMatConstIterator_<_Tp>
+template<typename _Tp> class SparseMatIterator_ : public SparseMatConstIterator_<_Tp>
 {
 public:
     typedef std::forward_iterator_tag iterator_category;
@@ -3774,6 +3833,7 @@ public:
     SparseMatIterator_();
     //! the full constructor setting the iterator to the first sparse matrix element
     SparseMatIterator_(SparseMat_<_Tp>* _m);
+    SparseMatIterator_(SparseMat* _m);
     //! the copy constructor
     SparseMatIterator_(const SparseMatIterator_& it);
 
@@ -4196,7 +4256,7 @@ typedef Ptr<CvMemStorage> MemStorage;
     i.e. no constructors or destructors
     are called for the sequence elements.
 */
-template<typename _Tp> class CV_EXPORTS Seq
+template<typename _Tp> class Seq
 {
 public:
     typedef SeqIterator<_Tp> iterator;
@@ -4279,7 +4339,7 @@ public:
 /*!
  STL-style Sequence Iterator inherited from the CvSeqReader structure
 */
-template<typename _Tp> class CV_EXPORTS SeqIterator : public CvSeqReader
+template<typename _Tp> class SeqIterator : public CvSeqReader
 {
 public:
     //! the default constructor
@@ -4457,6 +4517,26 @@ public:
                   Ptr<Algorithm> (Algorithm::*getter)()=0,
                   void (Algorithm::*setter)(const Ptr<Algorithm>&)=0,
                   const string& help=string());
+    void addParam(Algorithm& algo, const char* name,
+                  float& value, bool readOnly=false,
+                  float (Algorithm::*getter)()=0,
+                  void (Algorithm::*setter)(float)=0,
+                  const string& help=string());
+    void addParam(Algorithm& algo, const char* name,
+                  unsigned int& value, bool readOnly=false,
+                  unsigned int (Algorithm::*getter)()=0,
+                  void (Algorithm::*setter)(unsigned int)=0,
+                  const string& help=string());
+    void addParam(Algorithm& algo, const char* name,
+                  uint64& value, bool readOnly=false,
+                  uint64 (Algorithm::*getter)()=0,
+                  void (Algorithm::*setter)(uint64)=0,
+                  const string& help=string());
+    void addParam(Algorithm& algo, const char* name,
+                  uchar& value, bool readOnly=false,
+                  uchar (Algorithm::*getter)()=0,
+                  void (Algorithm::*setter)(uchar)=0,
+                  const string& help=string());
     template<typename _Tp, typename _Base> void addParam(Algorithm& algo, const char* name,
                   Ptr<_Tp>& value, bool readOnly=false,
                   Ptr<_Tp> (Algorithm::*getter)()=0,
@@ -4476,7 +4556,7 @@ protected:
 
 struct CV_EXPORTS Param
 {
-    enum { INT=0, BOOLEAN=1, REAL=2, STRING=3, MAT=4, MAT_VECTOR=5, ALGORITHM=6, FLOAT=7, UNSIGNED_INT=8, UINT64=9, SHORT=10 };
+    enum { INT=0, BOOLEAN=1, REAL=2, STRING=3, MAT=4, MAT_VECTOR=5, ALGORITHM=6, FLOAT=7, UNSIGNED_INT=8, UINT64=9, SHORT=10, UCHAR=11 };
 
     Param();
     Param(int _type, bool _readonly, int _offset,
@@ -4579,6 +4659,13 @@ template<> struct ParamType<uint64>
     enum { type = Param::UINT64 };
 };
 
+template<> struct ParamType<uchar>
+{
+    typedef uchar const_param_type;
+    typedef uchar member_type;
+
+    enum { type = Param::UCHAR };
+};
 
 /*!
 "\nThe CommandLineParser class is designed for command line arguments parsing\n"
@@ -4655,7 +4742,7 @@ class CV_EXPORTS CommandLineParser
     template<typename _Tp>
     static _Tp getData(const std::string& str)
     {
-        _Tp res;
+        _Tp res = _Tp();
         std::stringstream s1(str);
         s1 >> res;
         return res;
@@ -4726,6 +4813,9 @@ public:
     ~AutoLock() { mutex->unlock(); }
 protected:
     Mutex* mutex;
+private:
+    AutoLock(const AutoLock&);
+    AutoLock& operator = (const AutoLock&);
 };
 
 }
