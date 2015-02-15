@@ -22,7 +22,7 @@ Just add line in your Podfile:
 
 	pod 'OpenCV'
 
-### Instalation Manually 
+### Installation Manually 
 
 Download and add `opencv2.framework` to your project
 
