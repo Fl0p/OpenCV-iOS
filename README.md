@@ -41,7 +41,7 @@ Also add following frameworks to your project:
 
 Also add following libs :
 
-- libc++.dylib
+- libc++.tdb
 
 
 ## OpenCV README

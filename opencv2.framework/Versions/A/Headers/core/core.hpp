@@ -880,7 +880,7 @@ public:
     //! checks whether the rectangle contains the point
     bool contains(const Point_<_Tp>& pt) const;
 
-    _Tp x, y, width, height; //< the top-left corner, as well as width and height of the rectangle
+    _Tp x, y, width, height; //< the top-left corner, as well as width and height of the rectangle. Though, in your algorithms you may count x and y from the bottom-left corner
 };
 
 
